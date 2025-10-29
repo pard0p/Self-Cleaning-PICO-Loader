@@ -1,5 +1,5 @@
 #
-# Simple COFF Loader build spec
+# Self-Cleaning PICO Loader build spec
 #
 
 x64:
