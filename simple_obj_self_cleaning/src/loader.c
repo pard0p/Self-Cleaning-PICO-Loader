@@ -28,10 +28,6 @@ char * findAppendedPICO() {
 	return (char *)&__BOFDATA__;
 }
 
-char * findPicEnd() {
-	return (char *)&__DLLDATA__;
-}
-
 /**
  * Copy relevant CONTEXT registers from src to dst
  */
@@ -151,16 +147,29 @@ void cleanUp(char * start_addr, char * end_addr) {
 }
 
 /*
+ * Get the start and end address of our PIC loader.
+ */
+void go();
+
+char * getPicStart() {
+	return (char *)go;
+}
+
+char * getPicEnd() {
+	return (char *)&__DLLDATA__;
+}
+
+/*
  * Our PICO loader, have fun, go nuts!
  */
-void entry(char * start_addr, char * end_addr) {
+void go() {
+	char 		* start_addr;
+	char 		* end_addr;
+
 	char        * dstCode;
 	char        * dstData;
 	char        * src;
 	IMPORTFUNCS   funcs;
-
-	dprintf("[INFO] PIC start address: (memAddr: %p)\n", start_addr);
-	dprintf("[INFO] PIC end address: (memAddr: %p)\n", end_addr);
 
 	/** Find our DLL appended to this PIC */
 	src = findAppendedPICO();
@@ -192,36 +201,13 @@ void entry(char * start_addr, char * end_addr) {
 	KERNEL32$VirtualFree(dstCode, 0, MEM_RELEASE);
 	KERNEL32$VirtualFree(dstData, 0, MEM_RELEASE);
 
+	end_addr = getPicEnd();
+	start_addr = getPicStart();
+
+	dprintf("[INFO] PIC start address: (memAddr: %p)\n", start_addr);
+	dprintf("[INFO] PIC end address: (memAddr: %p)\n", end_addr);
+
 	cleanUp(start_addr, end_addr);
 
 	dprintf("[INFO] END!\n");
-}
-
-void __attribute__((naked)) retptr() {
-    __asm__ __volatile__ (
-        ".intel_syntax noprefix;"
-        "pop     rax;"
-        "jmp     rax;"
-        ".att_syntax prefix;"
-    );
-}
-
-void go() {
-	char * start_addr;
-	
-	__asm__ __volatile__ (
-		".intel_syntax noprefix;"
-		"call    retptr;"
-		"sub     rax, 0xD;"
-		"mov     %0, rax;"
-		".att_syntax prefix;"
-		: "=r" (start_addr)
-		:
-		: "rax"
-	);
-
-	entry(
-		start_addr,
-		findPicEnd()
-	);
 }
