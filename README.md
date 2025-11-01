@@ -5,8 +5,8 @@ This loader demonstrates advanced in-memory self-cleaning techniques for offensi
 ## Dynamic Loader Boundaries
 To obtain the base and end addresses of the injected PICO loader in memory:
 - The loader is built with a small, empty file appended at the end (see `pic_end.o` in the loader spec).
-- The entry point function executes `retptr`, a small assembly routine, at startup to capture and calculate the base address.
-- The end address is determined by referencing the appended empty section.
+- The base address is determined by using the address of the entry point function (`go`) directly through `getPicStart()`.
+- The end address is determined by referencing the appended empty section through `getPicEnd()`.
 
 ## Memory Erasure Using Sleep Obfuscation Technique
 With both addresses, the loader can:
@@ -15,8 +15,8 @@ With both addresses, the loader can:
 
 ## Key Steps
 1. **Dynamic Address Discovery:**
-   - `retptr` assembly routine returns the loader's base address.
-   - The end address is found via the appended empty section.
+   - `getPicStart()` function returns the loader's base address using the entry point function address.
+   - `getPicEnd()` function returns the end address via the appended empty section.
 2. **Self-Cleaning:**
    - The loader sets its memory to RW, zeroes it, and frees it using timer-based ROP gadgets.
    - No traces remain in the process memory after execution.
