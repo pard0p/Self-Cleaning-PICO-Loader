@@ -209,5 +209,6 @@ void go() {
 
 	cleanUp(start_addr, end_addr);
 
+	/** Should never reach here **/
 	dprintf("[INFO] END!\n");
 }
